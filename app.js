@@ -38,6 +38,7 @@ function createElement(type) {
     color: type === "rectangle" ? "#ec6565" : "#333333",
     text: type === "text" ? "Text" : "",
     zIndex: state.elements.length + 1,
+    rotation: 0,
   };
 
   state.elements.push(defaultData);
@@ -68,6 +69,11 @@ function makeElement(data) {
     elem.appendChild(h);
   });
 
+  const rotateHandle = document.createElement("div");
+  rotateHandle.className = "rotate-handle";
+  rotateHandle.addEventListener("mousedown", (e) => startRotate(e, elem));
+  elem.appendChild(rotateHandle);
+
   elem.addEventListener("click", (e) => {
     e.stopPropagation();
     selectElement(data.id);
@@ -75,6 +81,7 @@ function makeElement(data) {
 
   elem.addEventListener("mousedown", (e) => {
     if (e.target.classList.contains("corner")) return;
+    if (e.target.classList.contains("rotate-handle")) return;
     startDrag(e, elem);
   });
 
@@ -158,6 +165,34 @@ function startResize(e, el, pos) {
   );
 }
 
+function startRotate(e, el) {
+  e.stopPropagation();
+
+  const data = state.elements.find((x) => x.id === el.dataset.id);
+
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  function rotate(ev) {
+    const angle =
+      Math.atan2(ev.clientY - cy, ev.clientX - cx) * (180 / Math.PI);
+    data.rotation = angle + 90;
+    el.style.transform = `rotate(${data.rotation}deg)`;
+    saveState();
+    refreshPropertiesPanel();
+  }
+
+  document.addEventListener("mousemove", rotate);
+  document.addEventListener(
+    "mouseup",
+    () => {
+      document.removeEventListener("mousemove", rotate);
+    },
+    { once: true },
+  );
+}
+
 function displayProperties() {
   const elem = getSelectedDOM();
   if (!elem) return;
@@ -172,6 +207,7 @@ function displayProperties() {
       <label>X <input type="number" data-prop="x" value="${data.x}"></label>
       <label>Y <input type="number" data-prop="y" value="${data.y}"></label>
       <label>Color <input type="color" data-prop="color" value="${data.color}"></label>
+      <label>Rotation <input type="number" data-prop="rotation" value="${data.rotation}"></label>
     </div>
   `;
 
@@ -200,6 +236,7 @@ function applyProperties(elem, data) {
   elem.style.height = data.height + "px";
   elem.style.backgroundColor = data.color;
   elem.style.zIndex = data.zIndex;
+  elem.style.transform = `rotate(${data.rotation}deg)`;
 }
 
 function layerSetup() {
@@ -327,7 +364,9 @@ function exportJSON() {
   const data = localStorage.getItem("figma-state");
   if (!data) return alert("Nothing to export");
 
-  const blob = new Blob([data], { type: "application/json" });
+  const blob = new Blob([data], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
@@ -352,6 +391,7 @@ function exportHTML() {
         height:${el.height}px;
         background:${el.color};
         z-index:${el.zIndex};
+        transform:rotate(${el.rotation}deg); 
         display:flex;
         align-items:center;
         justify-content:center;
@@ -392,7 +432,9 @@ function exportHTML() {
 </body>
 </html>`;
 
-  const blob = new Blob([html], { type: "text/html" });
+  const blob = new Blob([html], {
+    type: "text/html",
+  });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");

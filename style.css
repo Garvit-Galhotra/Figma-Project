@@ -385,3 +385,25 @@ footer {
     justify-content: center;
   }
 }
+
+.rotate-handle {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #5b7cff;
+  border: 2px solid #fff;
+  cursor: grab;
+  display: none;
+}
+
+.new-element.selected .rotate-handle {
+  display: block;
+}
+
+.rotate-handle:active {
+  cursor: grabbing;
+}
