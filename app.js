@@ -9,9 +9,9 @@ const state = {
   selectedId: null,
 };
 
-let draggedLayerId = null;
+let layerId = null;
 
-function uid() {
+function uniqueid() {
   return crypto.randomUUID();
 }
 
@@ -28,8 +28,8 @@ addRect.addEventListener("click", () => createElement("rectangle"));
 addText.addEventListener("click", () => createElement("text"));
 
 function createElement(type) {
-  const data = {
-    id: uid(),
+  const defaultData = {
+    id: uniqueid(),
     type,
     x: 100,
     y: 100,
@@ -40,45 +40,45 @@ function createElement(type) {
     zIndex: state.elements.length + 1,
   };
 
-  state.elements.push(data);
-  const el = buildDOMElement(data);
-  canvas.appendChild(el);
-  selectElement(data.id);
+  state.elements.push(defaultData);
+  const elem = makeElement(defaultData);
+  canvas.appendChild(elem);
+  selectElement(defaultData.id);
   updateZIndex();
-  renderLayers();
+  layerSetup();
   saveState();
 }
 
-function buildDOMElement(data) {
-  const el = document.createElement("div");
-  el.className = "new-element";
-  el.dataset.id = data.id;
+function makeElement(data) {
+  const elem = document.createElement("div");
+  elem.className = "new-element";
+  elem.dataset.id = data.id;
 
-  applyState(el, data);
+  applyProperties(elem, data);
 
   if (data.type === "text") {
-    el.textContent = data.text;
-    el.contentEditable = true;
+    elem.textContent = data.text;
+    elem.contentEditable = true;
   }
 
   ["tl", "tr", "bl", "br"].forEach((pos) => {
     const h = document.createElement("div");
     h.classList.add("corner", pos);
-    h.addEventListener("mousedown", (e) => startResize(e, el, pos));
-    el.appendChild(h);
+    h.addEventListener("mousedown", (e) => startResize(e, elem, pos));
+    elem.appendChild(h);
   });
 
-  el.addEventListener("click", (e) => {
+  elem.addEventListener("click", (e) => {
     e.stopPropagation();
     selectElement(data.id);
   });
 
-  el.addEventListener("mousedown", (e) => {
+  elem.addEventListener("mousedown", (e) => {
     if (e.target.classList.contains("corner")) return;
-    startDrag(e, el);
+    startDrag(e, elem);
   });
 
-  return el;
+  return elem;
 }
 
 function selectElement(id) {
@@ -91,7 +91,7 @@ function selectElement(id) {
   if (!el) return;
 
   el.classList.add("selected");
-  renderProperties();
+  displayProperties();
 }
 
 canvas.addEventListener("click", () => {
@@ -158,9 +158,9 @@ function startResize(e, el, pos) {
   );
 }
 
-function renderProperties() {
-  const el = getSelectedDOM();
-  if (!el) return;
+function displayProperties() {
+  const elem = getSelectedDOM();
+  if (!elem) return;
 
   const data = state.elements.find((e) => e.id === state.selectedId);
 
@@ -176,33 +176,35 @@ function renderProperties() {
   `;
 
   propertiesPanel.querySelectorAll("input").forEach((input) => {
+    console.log(input.dataset);
+    console.log(input.type);
     input.addEventListener("input", () => {
       const prop = input.dataset.prop;
       data[prop] = input.type === "color" ? input.value : Number(input.value);
-      applyState(el, data);
+      applyProperties(elem, data);
       saveState();
     });
   });
 }
 
-function syncState(el) {
-  const data = state.elements.find((e) => e.id === el.dataset.id);
-  data.x = el.offsetLeft;
-  data.y = el.offsetTop;
-  data.width = el.offsetWidth;
-  data.height = el.offsetHeight;
+function syncState(elem) {
+  const data = state.elements.find((e) => e.id === elem.dataset.id);
+  data.x = elem.offsetLeft;
+  data.y = elem.offsetTop;
+  data.width = elem.offsetWidth;
+  data.height = elem.offsetHeight;
 }
 
-function applyState(el, data) {
-  el.style.left = data.x + "px";
-  el.style.top = data.y + "px";
-  el.style.width = data.width + "px";
-  el.style.height = data.height + "px";
-  el.style.backgroundColor = data.color;
-  el.style.zIndex = data.zIndex;
+function applyProperties(elem, data) {
+  elem.style.left = data.x + "px";
+  elem.style.top = data.y + "px";
+  elem.style.width = data.width + "px";
+  elem.style.height = data.height + "px";
+  elem.style.backgroundColor = data.color;
+  elem.style.zIndex = data.zIndex;
 }
 
-function renderLayers() {
+function layerSetup() {
   layersPanel.innerHTML = "<h3>Layers</h3>";
 
   [...state.elements]
@@ -217,18 +219,18 @@ function renderLayers() {
       item.onclick = () => selectElement(el.id);
 
       item.ondragstart = () => {
-        draggedLayerId = el.id;
+        layerId = el.id;
         item.classList.add("dragging");
       };
 
       item.ondragend = () => {
-        draggedLayerId = null;
+        layerId = null;
         item.classList.remove("dragging");
       };
 
       item.ondragover = (e) => e.preventDefault();
 
-      item.ondrop = () => reorderLayers(draggedLayerId, el.id);
+      item.ondrop = () => reorderLayers(layerId, el.id);
 
       layersPanel.appendChild(item);
     });
@@ -247,7 +249,7 @@ function reorderLayers(draggedId, targetId) {
   ];
 
   updateZIndex();
-  renderLayers();
+  layerSetup();
   saveState();
 }
 
@@ -260,18 +262,18 @@ function updateZIndex() {
 }
 
 document.addEventListener("keydown", (e) => {
-  const el = getSelectedDOM();
-  if (!el) return;
+  const elem = getSelectedDOM();
+  if (!elem) return;
 
-  let x = el.offsetLeft;
-  let y = el.offsetTop;
+  let x = elem.offsetLeft;
+  let y = elem.offsetTop;
   const step = 5;
 
   if (e.key === "Delete") {
-    el.remove();
+    elem.remove();
     state.elements = state.elements.filter((e) => e.id !== state.selectedId);
     state.selectedId = null;
-    renderLayers();
+    layerSetup();
     saveState();
     return;
   }
@@ -281,9 +283,9 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") y -= step;
   if (e.key === "ArrowDown") y += step;
 
-  el.style.left = x + "px";
-  el.style.top = y + "px";
-  syncState(el);
+  elem.style.left = x + "px";
+  elem.style.top = y + "px";
+  syncState(elem);
 });
 
 window.addEventListener("load", () => {
@@ -292,8 +294,8 @@ window.addEventListener("load", () => {
 
   state.elements = saved;
   saved.forEach((el) => {
-    canvas.appendChild(buildDOMElement(el));
+    canvas.appendChild(makeElement(el));
   });
   updateZIndex();
-  renderLayers();
+  layerSetup();
 });
