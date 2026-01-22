@@ -1,15 +1,16 @@
-
 const addRect = document.querySelector(".rect");
 const addText = document.querySelector(".text");
 const canvas = document.querySelector(".canvas-workspace");
 const propertiesPanel = document.querySelector(".element-property");
 const layersPanel = document.querySelector(".layers");
+
 const state = {
   elements: [],
   selectedId: null,
 };
 
 let draggedLayerId = null;
+
 function uid() {
   return crypto.randomUUID();
 }
@@ -22,6 +23,7 @@ function getSelectedDOM() {
 function saveState() {
   localStorage.setItem("figma-state", JSON.stringify(state.elements));
 }
+
 addRect.addEventListener("click", () => createElement("rectangle"));
 addText.addEventListener("click", () => createElement("text"));
 
@@ -78,6 +80,7 @@ function buildDOMElement(data) {
 
   return el;
 }
+
 function selectElement(id) {
   document
     .querySelectorAll(".new-element.selected")
@@ -98,6 +101,7 @@ canvas.addEventListener("click", () => {
   state.selectedId = null;
   propertiesPanel.innerHTML = "<h3>Properties</h3>";
 });
+
 function startDrag(e, el) {
   const rect = el.getBoundingClientRect();
   const canvasRect = canvas.getBoundingClientRect();
@@ -120,6 +124,7 @@ function startDrag(e, el) {
     { once: true },
   );
 }
+
 function startResize(e, el, pos) {
   e.stopPropagation();
 
@@ -152,6 +157,7 @@ function startResize(e, el, pos) {
     { once: true },
   );
 }
+
 function renderProperties() {
   const el = getSelectedDOM();
   if (!el) return;
@@ -178,6 +184,7 @@ function renderProperties() {
     });
   });
 }
+
 function syncState(el) {
   const data = state.elements.find((e) => e.id === el.dataset.id);
   data.x = el.offsetLeft;
@@ -194,6 +201,7 @@ function applyState(el, data) {
   el.style.backgroundColor = data.color;
   el.style.zIndex = data.zIndex;
 }
+
 function renderLayers() {
   layersPanel.innerHTML = "<h3>Layers</h3>";
 
@@ -250,6 +258,7 @@ function updateZIndex() {
     if (dom) dom.style.zIndex = el.zIndex;
   });
 }
+
 document.addEventListener("keydown", (e) => {
   const el = getSelectedDOM();
   if (!el) return;
@@ -276,6 +285,7 @@ document.addEventListener("keydown", (e) => {
   el.style.top = y + "px";
   syncState(el);
 });
+
 window.addEventListener("load", () => {
   const saved = JSON.parse(localStorage.getItem("figma-state"));
   if (!saved) return;
