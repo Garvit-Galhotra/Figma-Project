@@ -1,123 +1,141 @@
-# 🎨 Figma Style Design Tool --- Vanilla JavaScript Editor
+# 🎨 DesignX — Figma-Style Web Design Editor (Vanilla JavaScript)
 
-A **fully interactive Figma-style visual design editor** built using
-**pure HTML, CSS, and Vanilla JavaScript** --- without any frameworks,
-libraries, canvas, or SVG.
+## 📌 Project Overview
 
-This project demonstrates **core frontend engineering skills**,
-including **DOM-based rendering, drag-drop systems, real-time UI
-updates, state management, and export workflows**.
-
-> Designed as a **competition-grade frontend project** to showcase
-> advanced UI engineering, editor-style workflows, and production-level
-> interaction handling.
+**DesignX** is a **Figma-inspired web-based design editor** built using **pure HTML, CSS, and Vanilla JavaScript**.  
+The core objective of this project was to understand and implement **real-world editor architecture**, including **state management, DOM-based rendering, drag & drop systems, property binding, layer control, persistence, and export workflows** — without using any frameworks or libraries.
 
 ---
 
-## 🚀 Features
+## 🧠 Core Concept — State-Based Architecture (Inspired by React)
 
-### 🎯 Core Editor Functionality
+The entire editor is built around a **central state management system**, inspired by React’s state concept.
 
-- ➕ Add **Rectangles & Text elements**
-- 🖱️ **Drag & Move** elements freely inside canvas
-- 🔲 **Resize elements** using interactive corner handles
-- 🎯 **Single-element selection system**
-- 🧠 **State-driven architecture**
+A **global state object** stores all elements present on the canvas, along with their properties:
 
-### 🎛️ Properties Panel
+- Unique ID  
+- Position (X, Y)  
+- Dimensions (Width, Height)  
+- Color  
+- Rotation  
+- Z-index  
+- Text content  
 
-- Live editing of:
-  - Width
-  - Height
-  - X Position
-  - Y Position
-  - Background Color
-- Real-time visual updates
-- Auto-sync with selected element
+Each newly created element is **pushed into this central state** using a **unique ID generated via `crypto.randomUUID()`**.
 
-### 🗂️ Layers Panel
+This architecture allows:
 
-- Visual **layer listing**
-- Drag & drop **layer reordering**
-- Auto-managed **z-index stacking**
-- Click layer → Select element on canvas
-
-### ⌨️ Keyboard Controls
-
-- Arrow keys → Move selected element
-- Delete → Remove selected element
-- Pixel-perfect movement using keyboard nudging
-
-### 💾 Persistent Storage
-
-- Automatic **save to LocalStorage**
-- Auto-restore design state on page refresh
-
-### 📤 Export System
-
-- **Export JSON** → Download complete project state
-- **Export HTML** → Generate standalone HTML layout that visually
-  recreates the design
-
-### 🧹 Canvas Control
-
-- Clear canvas with single click
-- Full state reset + cleanup
+- Element selection using unique IDs  
+- DOM ↔ state synchronization  
+- LocalStorage persistence  
+- Reliable export pipelines  
 
 ---
 
-## 🛠️ Tech Stack
+## ➕ Element Creation Workflow
 
-- **HTML5** --- Semantic UI layout\
-- **CSS3** --- Modern UI styling + Flexbox layout\
-- **Vanilla JavaScript (DOM API)** --- Complete editor engine
+When the **Rectangle** or **Text** button is clicked:
 
-> ❌ No frameworks\
-> ❌ No libraries\
-> ❌ No canvas\
-> ❌ No SVG
-
----
-
-## 🧠 Architecture Highlights
-
-- Centralized **state management system**
-- DOM-driven rendering
-- Event-based interaction handling
-- Real-time UI ↔ state synchronization
-- Modular logic separation
+1. A function generates a **unique ID**
+2. Default properties are assigned
+3. The element object is added to the **central state**
+4. DOM element is created and appended
+5. State is saved to **LocalStorage**
 
 ---
 
-## 📂 Project Structure
+## 🎛️ Properties Panel System
 
-    ├── index.html    → UI structure & layout
-    ├── style.css     → Full UI + canvas styling
-    ├── script.js     → Core editor logic
-    └── README.md     → Project documentation
+On element selection:
 
----
+- The matching state object is found using the unique ID
+- The panel renders:
+  - Width  
+  - Height  
+  - X  
+  - Y  
+  - Color  
+  - Rotation  
 
-## 🧪 How To Run Locally
-
-```bash
-git clone https://github.com/Garvit-Galhotra/Figma-Project
-cd Figma-Project
-```
-
-Open `index.html` directly in your browser.
+All inputs are **two-way bound**, ensuring real-time updates.
 
 ---
 
-## 🎯 Project Goals
+## 🖱️ Drag System
 
-- Build a **complete Figma-like editor experience using only DOM**
-- Master **drag, resize, layer, and export workflows**
-- Understand **real-world frontend architecture**
-- Design a **competition-grade UI tool**
+Elements are draggable using:
+
+- `mousedown` → start drag  
+- `mousemove` → live position update  
+- `mouseup` → state save  
 
 ---
 
-## 👨‍💻 Author
+## 🔲 Resize System
 
-**Garvit Galhotra**
+Resize handles enable dynamic resizing by recalculating width & height during mouse movement.
+
+---
+
+## 🔄 Rotation System
+
+A circular handle appears above the selected element.  
+Dragging this handle rotates the element using trigonometric angle calculations.
+
+Rotation is fully synced with state and LocalStorage.
+
+---
+
+## 🗂️ Layer Panel System
+
+Each element appears inside a **draggable layers panel**:
+
+- Supports drag & drop reorder
+- Auto updates z-index
+
+---
+
+## 💾 Persistent Storage
+
+All editor state is stored using **LocalStorage** and restored on reload.
+
+---
+
+## 📤 Export System
+
+### JSON Export
+Downloads complete project state.
+
+### HTML Export
+Generates a standalone HTML layout matching the canvas exactly.
+
+---
+
+## 🧹 Clear Canvas
+
+Clears all elements, resets state, and wipes LocalStorage.
+
+---
+
+## ⌨️ Keyboard Controls
+
+- **Shift + Arrow Keys** → Move element by 5px  
+- **Delete** → Remove element  
+
+---
+
+## 📊 Contribution Disclosure
+
+**75% of the code was written by me.**  
+Remaining was assisted using ChatGPT and YouTube for optimization and learning.
+
+---
+
+## 🏆 Final Note
+
+DesignX simulates **professional-grade editor engineering**, demonstrating strong frontend architecture, UI engineering, and interaction logic.
+
+---
+
+**Author:** Garvit Galhotra  
+**Project Name:** DesignX
