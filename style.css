@@ -180,6 +180,17 @@ nav h3 {
   border-color: #00aaff;
 }
 
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .layers {
   flex: 1;
   overflow-y: auto;
@@ -260,8 +271,6 @@ footer {
   z-index: 1000;
 }
 
-/* ===== LEFT ===== */
-
 .footer-left {
   display: flex;
   align-items: center;
@@ -293,20 +302,14 @@ footer {
   color: #fff;
 }
 
-/* ===== CENTER ===== */
-
 .footer-center {
   display: flex;
   gap: 12px;
 }
 
-/* ===== RIGHT ===== */
-
 .footer-right {
   display: flex;
 }
-
-/* ===== BUTTON SYSTEM ===== */
 
 .btn {
   height: 40px;
@@ -337,8 +340,6 @@ footer {
 .btn:active {
   transform: scale(0.96);
 }
-
-/* ===== BUTTON VARIANTS ===== */
 
 .btn-json {
   background: linear-gradient(135deg, #5b7cff, #00d2ff);
@@ -374,8 +375,6 @@ footer {
   background: rgba(255, 70, 70, 0.18);
   box-shadow: 0 10px 28px rgba(255, 80, 80, 0.35);
 }
-
-/* ===== RESPONSIVE ===== */
 
 @media (max-width: 640px) {
   .app-footer {

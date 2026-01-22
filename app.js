@@ -3,16 +3,13 @@ const addText = document.querySelector(".text");
 const canvas = document.querySelector(".canvas-workspace");
 const propertiesPanel = document.querySelector(".element-property");
 const layersPanel = document.querySelector(".layers");
-const exportJSONBtn = document.querySelector(".btn-json");
-const exportHTMLBtn = document.querySelector(".btn-html");
-const clearBtn = document.querySelector(".btn-clear");
 
 const state = {
   elements: [],
   selectedId: null,
 };
 
-let draggedLayerId = null;
+let layerId = null;
 
 function uniqueid() {
   return crypto.randomUUID();
@@ -31,63 +28,57 @@ addRect.addEventListener("click", () => createElement("rectangle"));
 addText.addEventListener("click", () => createElement("text"));
 
 function createElement(type) {
-  const data = {
+  const defaultData = {
     id: uniqueid(),
     type,
     x: 100,
     y: 100,
-    width: type === "rectangle" ? 300 : 220,
-    height: type === "rectangle" ? 200 : 100,
-    color: type === "rectangle" ? "#ff5555" : "#333",
+    width: type === "rectangle" ? 300 : 250,
+    height: type === "rectangle" ? 200 : 120,
+    color: type === "rectangle" ? "#ec6565" : "#333333",
     text: type === "text" ? "Text" : "",
     zIndex: state.elements.length + 1,
   };
 
-  state.elements.push(data);
-  const elem = makeElement(data);
+  state.elements.push(defaultData);
+  const elem = makeElement(defaultData);
   canvas.appendChild(elem);
-
-  selectElement(data.id);
+  selectElement(defaultData.id);
   updateZIndex();
   layerSetup();
   saveState();
 }
 
 function makeElement(data) {
-  const el = document.createElement("div");
-  el.className = "new-element";
-  el.dataset.id = data.id;
+  const elem = document.createElement("div");
+  elem.className = "new-element";
+  elem.dataset.id = data.id;
 
-  applyProperties(el, data);
+  applyProperties(elem, data);
 
   if (data.type === "text") {
-    el.textContent = data.text;
-    el.contentEditable = true;
-
-    el.addEventListener("input", () => {
-      data.text = el.textContent;
-      saveState();
-    });
+    elem.textContent = data.text;
+    elem.contentEditable = true;
   }
 
   ["br"].forEach((pos) => {
-    const handle = document.createElement("div");
-    handle.className = "corner " + pos;
-    handle.addEventListener("mousedown", (e) => startResize(e, el, pos));
-    el.appendChild(handle);
+    const h = document.createElement("div");
+    h.classList.add("corner", pos);
+    h.addEventListener("mousedown", (e) => startResize(e, elem, pos));
+    elem.appendChild(h);
   });
 
-  el.addEventListener("click", (e) => {
+  elem.addEventListener("click", (e) => {
     e.stopPropagation();
     selectElement(data.id);
   });
 
-  el.addEventListener("mousedown", (e) => {
+  elem.addEventListener("mousedown", (e) => {
     if (e.target.classList.contains("corner")) return;
-    startDrag(e, el);
+    startDrag(e, elem);
   });
 
-  return el;
+  return elem;
 }
 
 function selectElement(id) {
@@ -114,7 +105,6 @@ canvas.addEventListener("click", () => {
 function startDrag(e, el) {
   const rect = el.getBoundingClientRect();
   const canvasRect = canvas.getBoundingClientRect();
-
   const offsetX = e.clientX - rect.left;
   const offsetY = e.clientY - rect.top;
 
@@ -169,47 +159,47 @@ function startResize(e, el, pos) {
 }
 
 function displayProperties() {
-  const el = getSelectedDOM();
-  if (!el) return;
+  const elem = getSelectedDOM();
+  if (!elem) return;
 
   const data = state.elements.find((e) => e.id === state.selectedId);
 
   propertiesPanel.innerHTML = `
     <h3>Properties</h3>
-    <label>Width <input type="number" data-prop="width" value="${data.width}"></label>
-    <label>Height <input type="number" data-prop="height" value="${data.height}"></label>
-    <label>X <input type="number" data-prop="x" value="${data.x}"></label>
-    <label>Y <input type="number" data-prop="y" value="${data.y}"></label>
-    <label>Color <input type="color" data-prop="color" value="${data.color}"></label>
+    <div class="properties">
+      <label>Width <input type="number" data-prop="width" value="${data.width}"></label>
+      <label>Height <input type="number" data-prop="height" value="${data.height}"></label>
+      <label>X <input type="number" data-prop="x" value="${data.x}"></label>
+      <label>Y <input type="number" data-prop="y" value="${data.y}"></label>
+      <label>Color <input type="color" data-prop="color" value="${data.color}"></label>
+    </div>
   `;
 
   propertiesPanel.querySelectorAll("input").forEach((input) => {
     input.addEventListener("input", () => {
       const prop = input.dataset.prop;
       data[prop] = input.type === "color" ? input.value : Number(input.value);
-      applyProperties(el, data);
+      applyProperties(elem, data);
       saveState();
     });
   });
 }
 
-function syncState(el) {
-  const data = state.elements.find((e) => e.id === el.dataset.id);
-  if (!data) return;
-
-  data.x = el.offsetLeft;
-  data.y = el.offsetTop;
-  data.width = el.offsetWidth;
-  data.height = el.offsetHeight;
+function syncState(elem) {
+  const data = state.elements.find((e) => e.id === elem.dataset.id);
+  data.x = elem.offsetLeft;
+  data.y = elem.offsetTop;
+  data.width = elem.offsetWidth;
+  data.height = elem.offsetHeight;
 }
 
-function applyProperties(el, data) {
-  el.style.left = data.x + "px";
-  el.style.top = data.y + "px";
-  el.style.width = data.width + "px";
-  el.style.height = data.height + "px";
-  el.style.backgroundColor = data.color;
-  el.style.zIndex = data.zIndex;
+function applyProperties(elem, data) {
+  elem.style.left = data.x + "px";
+  elem.style.top = data.y + "px";
+  elem.style.width = data.width + "px";
+  elem.style.height = data.height + "px";
+  elem.style.backgroundColor = data.color;
+  elem.style.zIndex = data.zIndex;
 }
 
 function layerSetup() {
@@ -226,18 +216,29 @@ function layerSetup() {
 
       item.onclick = () => selectElement(el.id);
 
-      item.ondragstart = () => (draggedLayerId = el.id);
+      item.ondragstart = () => {
+        layerId = el.id;
+        item.classList.add("dragging");
+      };
+
+      item.ondragend = () => {
+        layerId = null;
+        item.classList.remove("dragging");
+      };
+
       item.ondragover = (e) => e.preventDefault();
-      item.ondrop = () => reorderLayers(draggedLayerId, el.id);
+
+      item.ondrop = () => reorderLayers(layerId, el.id);
 
       layersPanel.appendChild(item);
     });
 }
 
-function reorderLayers(fromId, toId) {
-  const from = state.elements.findIndex((e) => e.id === fromId);
-  const to = state.elements.findIndex((e) => e.id === toId);
+function reorderLayers(draggedId, targetId) {
+  if (!draggedId || draggedId === targetId) return;
 
+  const from = state.elements.findIndex((e) => e.id === draggedId);
+  const to = state.elements.findIndex((e) => e.id === targetId);
   if (from === -1 || to === -1) return;
 
   [state.elements[from], state.elements[to]] = [
@@ -259,15 +260,15 @@ function updateZIndex() {
 }
 
 document.addEventListener("keydown", (e) => {
-  const el = getSelectedDOM();
-  if (!el) return;
+  const elem = getSelectedDOM();
+  if (!elem) return;
 
-  let x = el.offsetLeft;
-  let y = el.offsetTop;
+  let x = elem.offsetLeft;
+  let y = elem.offsetTop;
   const step = 5;
 
   if (e.key === "Delete") {
-    el.remove();
+    elem.remove();
     state.elements = state.elements.filter((e) => e.id !== state.selectedId);
     state.selectedId = null;
     layerSetup();
@@ -280,10 +281,47 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") y -= step;
   if (e.key === "ArrowDown") y += step;
 
-  el.style.left = x + "px";
-  el.style.top = y + "px";
-  syncState(el);
+  elem.style.left = x + "px";
+  elem.style.top = y + "px";
+  syncState(elem);
+  refreshPropertiesPanel();
 });
+
+function refreshPropertiesPanel() {
+  if (!state.selectedId) return;
+  if (isEditingProperty) return;
+  displayProperties();
+}
+
+let isEditingProperty = false;
+
+document.addEventListener("focusin", (e) => {
+  if (e.target.closest(".element-property")) {
+    isEditingProperty = true;
+  }
+});
+
+document.addEventListener("focusout", (e) => {
+  if (e.target.closest(".element-property")) {
+    isEditingProperty = false;
+  }
+});
+
+window.addEventListener("load", () => {
+  const saved = JSON.parse(localStorage.getItem("figma-state"));
+  if (!saved) return;
+
+  state.elements = saved;
+  saved.forEach((el) => {
+    canvas.appendChild(makeElement(el));
+  });
+  updateZIndex();
+  layerSetup();
+});
+
+const exportJSONBtn = document.querySelector(".btn-json");
+const exportHTMLBtn = document.querySelector(".btn-html");
+const clearBtn = document.querySelector(".btn-clear");
 
 function exportJSON() {
   const data = localStorage.getItem("figma-state");
@@ -318,7 +356,6 @@ function exportHTML() {
         align-items:center;
         justify-content:center;
         font-family:system-ui;
-        border-radius:4px;
       ">
         ${el.type === "text" ? el.text : ""}
       </div>`;
@@ -345,7 +382,6 @@ function exportHTML() {
     height:600px;
     background:white;
     position:relative;
-    box-shadow:0 20px 60px rgba(0,0,0,.5);
   }
 </style>
 </head>
@@ -377,17 +413,18 @@ function clearCanvas() {
   saveState();
 }
 
-window.addEventListener("load", () => {
-  const saved = JSON.parse(localStorage.getItem("figma-state"));
-  if (!saved) return;
+exportJSONBtn.addEventListener("click", exportJSON);
+exportHTMLBtn.addEventListener("click", exportHTML);
+clearBtn.addEventListener("click", clearCanvas);
 
-  state.elements = saved;
-  saved.forEach((el) => canvas.appendChild(makeElement(el)));
+document.addEventListener("input", (e) => {
+  if (!e.target.classList.contains("new-element")) return;
+  const id = e.target.dataset.id;
+  if (!id) return;
 
-  updateZIndex();
-  layerSetup();
+  const data = state.elements.find((el) => el.id === id);
+  if (!data || data.type !== "text") return;
+
+  data.text = e.target.textContent;
+  saveState();
 });
-
-exportJSONBtn?.addEventListener("click", exportJSON);
-exportHTMLBtn?.addEventListener("click", exportHTML);
-clearBtn?.addEventListener("click", clearCanvas);
