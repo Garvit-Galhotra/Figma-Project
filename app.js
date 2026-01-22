@@ -3,13 +3,16 @@ const addText = document.querySelector(".text");
 const canvas = document.querySelector(".canvas-workspace");
 const propertiesPanel = document.querySelector(".element-property");
 const layersPanel = document.querySelector(".layers");
+const exportJSONBtn = document.querySelector(".btn-json");
+const exportHTMLBtn = document.querySelector(".btn-html");
+const clearBtn = document.querySelector(".btn-clear");
 
 const state = {
   elements: [],
   selectedId: null,
 };
 
-let layerId = null;
+let draggedLayerId = null;
 
 function uniqueid() {
   return crypto.randomUUID();
@@ -28,57 +31,63 @@ addRect.addEventListener("click", () => createElement("rectangle"));
 addText.addEventListener("click", () => createElement("text"));
 
 function createElement(type) {
-  const defaultData = {
+  const data = {
     id: uniqueid(),
     type,
     x: 100,
     y: 100,
-    width: type === "rectangle" ? 300 : 250,
-    height: type === "rectangle" ? 200 : 120,
-    color: type === "rectangle" ? "#ff0000" : "#333333",
+    width: type === "rectangle" ? 300 : 220,
+    height: type === "rectangle" ? 200 : 100,
+    color: type === "rectangle" ? "#ff5555" : "#333",
     text: type === "text" ? "Text" : "",
     zIndex: state.elements.length + 1,
   };
 
-  state.elements.push(defaultData);
-  const elem = makeElement(defaultData);
+  state.elements.push(data);
+  const elem = makeElement(data);
   canvas.appendChild(elem);
-  selectElement(defaultData.id);
+
+  selectElement(data.id);
   updateZIndex();
   layerSetup();
   saveState();
 }
 
 function makeElement(data) {
-  const elem = document.createElement("div");
-  elem.className = "new-element";
-  elem.dataset.id = data.id;
+  const el = document.createElement("div");
+  el.className = "new-element";
+  el.dataset.id = data.id;
 
-  applyProperties(elem, data);
+  applyProperties(el, data);
 
   if (data.type === "text") {
-    elem.textContent = data.text;
-    elem.contentEditable = true;
+    el.textContent = data.text;
+    el.contentEditable = true;
+
+    el.addEventListener("input", () => {
+      data.text = el.textContent;
+      saveState();
+    });
   }
 
-  ["tl", "tr", "bl", "br"].forEach((pos) => {
-    const h = document.createElement("div");
-    h.classList.add("corner", pos);
-    h.addEventListener("mousedown", (e) => startResize(e, elem, pos));
-    elem.appendChild(h);
+  ["br"].forEach((pos) => {
+    const handle = document.createElement("div");
+    handle.className = "corner " + pos;
+    handle.addEventListener("mousedown", (e) => startResize(e, el, pos));
+    el.appendChild(handle);
   });
 
-  elem.addEventListener("click", (e) => {
+  el.addEventListener("click", (e) => {
     e.stopPropagation();
     selectElement(data.id);
   });
 
-  elem.addEventListener("mousedown", (e) => {
+  el.addEventListener("mousedown", (e) => {
     if (e.target.classList.contains("corner")) return;
-    startDrag(e, elem);
+    startDrag(e, el);
   });
 
-  return elem;
+  return el;
 }
 
 function selectElement(id) {
@@ -105,6 +114,7 @@ canvas.addEventListener("click", () => {
 function startDrag(e, el) {
   const rect = el.getBoundingClientRect();
   const canvasRect = canvas.getBoundingClientRect();
+
   const offsetX = e.clientX - rect.left;
   const offsetY = e.clientY - rect.top;
 
@@ -159,49 +169,47 @@ function startResize(e, el, pos) {
 }
 
 function displayProperties() {
-  const elem = getSelectedDOM();
-  if (!elem) return;
+  const el = getSelectedDOM();
+  if (!el) return;
 
   const data = state.elements.find((e) => e.id === state.selectedId);
 
   propertiesPanel.innerHTML = `
     <h3>Properties</h3>
-    <div class="properties">
-      <label>Width <input type="number" data-prop="width" value="${data.width}"></label>
-      <label>Height <input type="number" data-prop="height" value="${data.height}"></label>
-      <label>X <input type="number" data-prop="x" value="${data.x}"></label>
-      <label>Y <input type="number" data-prop="y" value="${data.y}"></label>
-      <label>Color <input type="color" data-prop="color" value="${data.color}"></label>
-    </div>
+    <label>Width <input type="number" data-prop="width" value="${data.width}"></label>
+    <label>Height <input type="number" data-prop="height" value="${data.height}"></label>
+    <label>X <input type="number" data-prop="x" value="${data.x}"></label>
+    <label>Y <input type="number" data-prop="y" value="${data.y}"></label>
+    <label>Color <input type="color" data-prop="color" value="${data.color}"></label>
   `;
 
   propertiesPanel.querySelectorAll("input").forEach((input) => {
-    console.log(input.dataset);
-    console.log(input.type);
     input.addEventListener("input", () => {
       const prop = input.dataset.prop;
       data[prop] = input.type === "color" ? input.value : Number(input.value);
-      applyProperties(elem, data);
+      applyProperties(el, data);
       saveState();
     });
   });
 }
 
-function syncState(elem) {
-  const data = state.elements.find((e) => e.id === elem.dataset.id);
-  data.x = elem.offsetLeft;
-  data.y = elem.offsetTop;
-  data.width = elem.offsetWidth;
-  data.height = elem.offsetHeight;
+function syncState(el) {
+  const data = state.elements.find((e) => e.id === el.dataset.id);
+  if (!data) return;
+
+  data.x = el.offsetLeft;
+  data.y = el.offsetTop;
+  data.width = el.offsetWidth;
+  data.height = el.offsetHeight;
 }
 
-function applyProperties(elem, data) {
-  elem.style.left = data.x + "px";
-  elem.style.top = data.y + "px";
-  elem.style.width = data.width + "px";
-  elem.style.height = data.height + "px";
-  elem.style.backgroundColor = data.color;
-  elem.style.zIndex = data.zIndex;
+function applyProperties(el, data) {
+  el.style.left = data.x + "px";
+  el.style.top = data.y + "px";
+  el.style.width = data.width + "px";
+  el.style.height = data.height + "px";
+  el.style.backgroundColor = data.color;
+  el.style.zIndex = data.zIndex;
 }
 
 function layerSetup() {
@@ -218,29 +226,18 @@ function layerSetup() {
 
       item.onclick = () => selectElement(el.id);
 
-      item.ondragstart = () => {
-        layerId = el.id;
-        item.classList.add("dragging");
-      };
-
-      item.ondragend = () => {
-        layerId = null;
-        item.classList.remove("dragging");
-      };
-
+      item.ondragstart = () => (draggedLayerId = el.id);
       item.ondragover = (e) => e.preventDefault();
-
-      item.ondrop = () => reorderLayers(layerId, el.id);
+      item.ondrop = () => reorderLayers(draggedLayerId, el.id);
 
       layersPanel.appendChild(item);
     });
 }
 
-function reorderLayers(draggedId, targetId) {
-  if (!draggedId || draggedId === targetId) return;
+function reorderLayers(fromId, toId) {
+  const from = state.elements.findIndex((e) => e.id === fromId);
+  const to = state.elements.findIndex((e) => e.id === toId);
 
-  const from = state.elements.findIndex((e) => e.id === draggedId);
-  const to = state.elements.findIndex((e) => e.id === targetId);
   if (from === -1 || to === -1) return;
 
   [state.elements[from], state.elements[to]] = [
@@ -262,15 +259,15 @@ function updateZIndex() {
 }
 
 document.addEventListener("keydown", (e) => {
-  const elem = getSelectedDOM();
-  if (!elem) return;
+  const el = getSelectedDOM();
+  if (!el) return;
 
-  let x = elem.offsetLeft;
-  let y = elem.offsetTop;
+  let x = el.offsetLeft;
+  let y = el.offsetTop;
   const step = 5;
 
   if (e.key === "Delete") {
-    elem.remove();
+    el.remove();
     state.elements = state.elements.filter((e) => e.id !== state.selectedId);
     state.selectedId = null;
     layerSetup();
@@ -283,19 +280,114 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") y -= step;
   if (e.key === "ArrowDown") y += step;
 
-  elem.style.left = x + "px";
-  elem.style.top = y + "px";
-  syncState(elem);
+  el.style.left = x + "px";
+  el.style.top = y + "px";
+  syncState(el);
 });
+
+function exportJSON() {
+  const data = localStorage.getItem("figma-state");
+  if (!data) return alert("Nothing to export");
+
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "design.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function exportHTML() {
+  if (!state.elements.length) return alert("Nothing to export");
+
+  const elementsHTML = state.elements
+    .map((el) => {
+      return `
+      <div style="
+        position:absolute;
+        left:${el.x}px;
+        top:${el.y}px;
+        width:${el.width}px;
+        height:${el.height}px;
+        background:${el.color};
+        z-index:${el.zIndex};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-family:system-ui;
+        border-radius:4px;
+      ">
+        ${el.type === "text" ? el.text : ""}
+      </div>`;
+    })
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exported Design</title>
+<style>
+  body{
+    margin:0;
+    background:#111;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+  }
+  .canvas{
+    width:1000px;
+    height:600px;
+    background:white;
+    position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+</style>
+</head>
+<body>
+  <div class="canvas">
+    ${elementsHTML}
+  </div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "design.html";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function clearCanvas() {
+  if (!confirm("Clear entire canvas?")) return;
+  state.elements = [];
+  state.selectedId = null;
+  canvas.innerHTML = "";
+  layersPanel.innerHTML = "<h3>Layers</h3>";
+  propertiesPanel.innerHTML = "<h3>Properties</h3>";
+  saveState();
+}
 
 window.addEventListener("load", () => {
   const saved = JSON.parse(localStorage.getItem("figma-state"));
   if (!saved) return;
 
   state.elements = saved;
-  saved.forEach((el) => {
-    canvas.appendChild(makeElement(el));
-  });
+  saved.forEach((el) => canvas.appendChild(makeElement(el)));
+
   updateZIndex();
   layerSetup();
 });
+
+exportJSONBtn?.addEventListener("click", exportJSON);
+exportHTMLBtn?.addEventListener("click", exportHTML);
+clearBtn?.addEventListener("click", clearCanvas);
