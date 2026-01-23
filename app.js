@@ -1,3 +1,24 @@
+const themeButtons = document.querySelectorAll("[data-theme]");
+
+function setTheme(theme) {
+  document.body.className = "";
+  if (theme !== "dark") document.body.classList.add(theme);
+  localStorage.setItem("editor-theme", theme);
+
+  themeButtons.forEach((b) => b.classList.remove("active"));
+  const activeBtn = document.querySelector(`[data-theme="${theme}"]`);
+  if (activeBtn) activeBtn.classList.add("active");
+}
+
+const savedTheme = localStorage.getItem("editor-theme") || "dark";
+setTheme(savedTheme);
+
+themeButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    setTheme(btn.dataset.theme);
+  });
+});
+
 const addRect = document.querySelector(".rect");
 const addText = document.querySelector(".text");
 const canvas = document.querySelector(".canvas-workspace");
@@ -7,6 +28,7 @@ const layersPanel = document.querySelector(".layers");
 const state = {
   elements: [],
   selectedId: null,
+  canvasColor: getComputedStyle(canvas).backgroundColor || "#1b1b1b",
 };
 
 let layerId = null;
@@ -21,7 +43,28 @@ function getSelectedDOM() {
 }
 
 function saveState() {
-  localStorage.setItem("figma-state", JSON.stringify(state.elements));
+  localStorage.setItem(
+    "figma-state",
+    JSON.stringify({
+      elements: state.elements,
+      canvasColor: state.canvasColor,
+    }),
+  );
+}
+
+function applyCanvasColor() {
+  canvas.style.background = state.canvasColor;
+}
+
+function rgbToHex(rgb) {
+  if (!rgb.startsWith("rgb")) return rgb;
+
+  const [r, g, b] = rgb
+    .replace(/[^\d,]/g, "")
+    .split(",")
+    .map(Number);
+
+  return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
 addRect.addEventListener("click", () => createElement("rectangle"));
@@ -105,8 +148,26 @@ canvas.addEventListener("click", () => {
   document
     .querySelectorAll(".new-element.selected")
     .forEach((el) => el.classList.remove("selected"));
+
   state.selectedId = null;
-  propertiesPanel.innerHTML = "<h3>Properties</h3>";
+
+  propertiesPanel.innerHTML = `
+    <h3>Properties</h3>
+    <div class="properties">
+      <label>
+        Canvas Color
+        <input type="color" value="${rgbToHex(state.canvasColor)}">
+      </label>
+    </div>
+  `;
+
+  const colorInput = propertiesPanel.querySelector("input");
+
+  colorInput.addEventListener("input", () => {
+    state.canvasColor = colorInput.value;
+    applyCanvasColor();
+    saveState();
+  });
 });
 
 function startDrag(e, el) {
@@ -348,10 +409,14 @@ window.addEventListener("load", () => {
   const saved = JSON.parse(localStorage.getItem("figma-state"));
   if (!saved) return;
 
-  state.elements = saved;
-  saved.forEach((el) => {
+  state.elements = saved.elements || saved;
+  state.canvasColor = saved.canvasColor || state.canvasColor;
+
+  state.elements.forEach((el) => {
     canvas.appendChild(makeElement(el));
   });
+
+  applyCanvasColor();
   updateZIndex();
   layerSetup();
 });
@@ -411,7 +476,7 @@ function exportHTML() {
 <style>
   body{
     margin:0;
-    background:#111;
+    background:${state.canvasColor};
     display:flex;
     justify-content:center;
     align-items:center;

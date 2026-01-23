@@ -13,22 +13,22 @@ The entire editor is built around a **central state management system**, inspire
 
 A **global state object** stores all elements present on the canvas, along with their properties:
 
-- Unique ID  
-- Position (X, Y)  
-- Dimensions (Width, Height)  
-- Color  
-- Rotation  
-- Z-index  
-- Text content  
+- Unique ID
+- Position (X, Y)
+- Dimensions (Width, Height)
+- Color
+- Rotation
+- Z-index
+- Text content
 
 Each newly created element is **pushed into this central state** using a **unique ID generated via `crypto.randomUUID()`**.
 
 This architecture allows:
 
-- Element selection using unique IDs  
-- DOM ↔ state synchronization  
-- LocalStorage persistence  
-- Reliable export pipelines  
+- Element selection using unique IDs
+- DOM ↔ state synchronization
+- LocalStorage persistence
+- Reliable export pipelines
 
 ---
 
@@ -50,12 +50,12 @@ On element selection:
 
 - The matching state object is found using the unique ID
 - The panel renders:
-  - Width  
-  - Height  
-  - X  
-  - Y  
-  - Color  
-  - Rotation  
+  - Width
+  - Height
+  - X
+  - Y
+  - Color
+  - Rotation
 
 All inputs are **two-way bound**, ensuring real-time updates.
 
@@ -65,9 +65,9 @@ All inputs are **two-way bound**, ensuring real-time updates.
 
 Elements are draggable using:
 
-- `mousedown` → start drag  
-- `mousemove` → live position update  
-- `mouseup` → state save  
+- `mousedown` → start drag
+- `mousemove` → live position update
+- `mouseup` → state save
 
 ---
 
@@ -104,9 +104,11 @@ All editor state is stored using **LocalStorage** and restored on reload.
 ## 📤 Export System
 
 ### JSON Export
+
 Downloads complete project state.
 
 ### HTML Export
+
 Generates a standalone HTML layout matching the canvas exactly.
 
 ---
@@ -119,8 +121,8 @@ Clears all elements, resets state, and wipes LocalStorage.
 
 ## ⌨️ Keyboard Controls
 
-- **Shift + Arrow Keys** → Move element by 5px  
-- **Delete** → Remove element  
+- **Shift + Arrow Keys** → Move element by 5px
+- **Delete** → Remove element
 
 ---
 
