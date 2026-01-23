@@ -1,143 +1,264 @@
-# 🎨 DesignX — Figma-Style Web Design Editor (Vanilla JavaScript)
+# 🎨 DesignX --- Figma-Style Web Design Editor (Pure HTML, CSS & Vanilla JS)
 
 ## 📌 Project Overview
 
-**DesignX** is a **Figma-inspired web-based design editor** built using **pure HTML, CSS, and Vanilla JavaScript**.  
-The core objective of this project was to understand and implement **real-world editor architecture**, including **state management, DOM-based rendering, drag & drop systems, property binding, layer control, persistence, and export workflows** — without using any frameworks or libraries.
+**DesignX** is a **Figma-inspired web-based design editor** built
+entirely using **pure HTML, CSS, and Vanilla JavaScript**, without any
+external frameworks or libraries.
+
+The goal of this project is to deeply understand and implement
+**real-world frontend editor architecture**, including:
+
+- Centralized **state management**
+- **DOM-based rendering engine**
+- Drag, resize & rotate interaction systems
+- **Layer ordering & z-index control**
+- **Live properties inspector**
+- **LocalStorage persistence**
+- **Export pipelines (JSON + HTML)**
+- Modern **UI/UX engineering**
+
+This project simulates the **core internal systems of professional
+design tools like Figma and Canva**, making it a strong demonstration of
+**advanced frontend engineering skills**.
 
 ---
 
-## 🧠 Core Concept — State-Based Architecture (Inspired by React)
+## 🧠 Core Architecture --- State-Driven Design Engine
 
-The entire editor is built around a **central state management system**, inspired by React’s state concept.
+The entire editor is powered by a **centralized state object**, inspired
+by React-style architecture.
 
-A **global state object** stores all elements present on the canvas, along with their properties:
+```js
+const state = {
+  elements: [],
+  selectedId: null,
+  canvasColor: ...
+};
+```
 
-- Unique ID
+Each element is stored inside this state with:
+
+- Unique ID (`crypto.randomUUID()`)
+- Type (rectangle / text)
 - Position (X, Y)
 - Dimensions (Width, Height)
-- Color
-- Rotation
-- Z-index
-- Text content
+- Background Color
+- Rotation Angle
+- Z-index (layer ordering)
+- Text content (for text elements)
 
-Each newly created element is **pushed into this central state** using a **unique ID generated via `crypto.randomUUID()`**.
+This enables:
 
-This architecture allows:
-
-- Element selection using unique IDs
-- DOM ↔ state synchronization
-- LocalStorage persistence
-- Reliable export pipelines
+- Precise **DOM ↔ state synchronization**
+- Clean **selection management**
+- Persistent **LocalStorage storage**
+- Reliable **export generation**
+- Scalable architecture for future features
 
 ---
 
 ## ➕ Element Creation Workflow
 
-When the **Rectangle** or **Text** button is clicked:
+When **Rectangle** or **Text** is added:
 
-1. A function generates a **unique ID**
-2. Default properties are assigned
-3. The element object is added to the **central state**
-4. DOM element is created and appended
-5. State is saved to **LocalStorage**
+1.  Unique ID is generated
+2.  Default properties are assigned
+3.  Element object is pushed into global state
+4.  DOM element is dynamically created
+5.  Element becomes selectable
+6.  State is saved to **LocalStorage**
+7.  Layers panel is updated
 
 ---
 
-## 🎛️ Properties Panel System
+## 🎛️ Properties Inspector (Live Property Binding)
 
-On element selection:
+Selecting any element opens a **dynamic properties panel** allowing
+real-time control of:
 
-- The matching state object is found using the unique ID
-- The panel renders:
-  - Width
-  - Height
-  - X
-  - Y
-  - Color
-  - Rotation
+- Width\
+- Height\
+- X position\
+- Y position\
+- Color\
+- Rotation
 
-All inputs are **two-way bound**, ensuring real-time updates.
+All inputs are **two-way bound** to the state engine, ensuring instant
+UI updates and persistent storage.
 
 ---
 
 ## 🖱️ Drag System
 
-Elements are draggable using:
+Elements support **free-form drag movement** using:
 
-- `mousedown` → start drag
-- `mousemove` → live position update
-- `mouseup` → state save
+- `mousedown` → drag start\
+- `mousemove` → real-time movement\
+- `mouseup` → save final state
+
+Movement is **pixel-perfect** and fully synchronized with state.
 
 ---
 
 ## 🔲 Resize System
 
-Resize handles enable dynamic resizing by recalculating width & height during mouse movement.
+Each element includes a **resize handle** enabling:
+
+- Dynamic width & height changes
+- Minimum size enforcement
+- Live visual resizing
+- State & DOM synchronization
 
 ---
 
 ## 🔄 Rotation System
 
-A circular handle appears above the selected element.  
-Dragging this handle rotates the element using trigonometric angle calculations.
+A **dedicated rotation handle** appears above selected elements.
 
-Rotation is fully synced with state and LocalStorage.
+Rotation uses **trigonometric angle calculations**:
+
+- Calculates center point
+- Tracks mouse movement
+- Computes rotation using `Math.atan2()`
+- Applies smooth real-time rotation
+
+All rotation data is **persisted and exportable**.
 
 ---
 
 ## 🗂️ Layer Panel System
 
-Each element appears inside a **draggable layers panel**:
+Each canvas element appears in the **layers panel**, supporting:
 
-- Supports drag & drop reorder
-- Auto updates z-index
+- Drag & drop reordering
+- Dynamic z-index recalculation
+- Live canvas layering updates
+
+This system mirrors **professional layer control mechanisms** found in
+real design tools.
 
 ---
 
-## 💾 Persistent Storage
+## 🎨 Theme Engine
 
-All editor state is stored using **LocalStorage** and restored on reload.
+DesignX supports **four dynamic UI themes**:
+
+- Dark\
+- Light\
+- Ocean\
+- Cyber
+
+Theme selection is:
+
+- Instantly applied\
+- Persisted using LocalStorage\
+- Smoothly animated using CSS transitions
+
+---
+
+## 🎨 Canvas Color Control
+
+When no element is selected, the properties panel exposes **canvas
+background color control**, allowing users to modify the design surface
+itself.
+
+---
+
+## 💾 Persistent Storage (LocalStorage Engine)
+
+All editor state is stored using **LocalStorage**, enabling:
+
+- Auto-save functionality\
+- Full restoration after reload\
+- Seamless editing continuity
 
 ---
 
 ## 📤 Export System
 
-### JSON Export
+### 📄 JSON Export
 
-Downloads complete project state.
+Exports the **entire project state** for:
 
-### HTML Export
+- Backup
+- Debugging
+- External processing
+- Future import pipelines
 
-Generates a standalone HTML layout matching the canvas exactly.
+---
+
+### 🌐 HTML Export
+
+Generates a **fully standalone HTML file** reproducing:
+
+- Exact element positions
+- Dimensions
+- Colors
+- Rotations
+- Layer ordering
+
+This allows **direct hosting and sharing of designs**.
 
 ---
 
 ## 🧹 Clear Canvas
 
-Clears all elements, resets state, and wipes LocalStorage.
+Provides a full reset:
+
+- Clears canvas
+- Resets state
+- Wipes LocalStorage
+- Restores clean workspace
 
 ---
 
 ## ⌨️ Keyboard Controls
 
-- **Shift + Arrow Keys** → Move element by 5px
-- **Delete** → Remove element
+Key Action
+
+---
+
+Arrow Keys Move selected element (5px step)
+Delete Remove selected element
+
+---
+
+## 🧠 Engineering Highlights
+
+- Fully **state-driven UI system**
+- Zero frameworks --- **pure Vanilla JavaScript**
+- Advanced **drag / resize / rotate math**
+- DOM performance optimizations
+- Real editor-style architecture
+- Professional UI polish
 
 ---
 
 ## 📊 Contribution Disclosure
 
-**75% of the code was written by me.**  
-Remaining was assisted using ChatGPT and YouTube for optimization and learning.
+**Primary Developer:** Garvit Galhotra
+
+This project was **primarily developed by me**, with **AI-assisted
+optimization and debugging support** for learning and improvement.
 
 ---
 
 ## 🏆 Final Note
 
-DesignX simulates **professional-grade editor engineering**, demonstrating strong frontend architecture, UI engineering, and interaction logic.
+DesignX demonstrates **real-world frontend engineering practices**,
+editor architecture design, and interaction logic.
+
+This project reflects **professional-grade development principles** and
+showcases strong skills in:
+
+- UI Engineering\
+- Frontend System Design\
+- State Architecture\
+- Interaction Modeling
 
 ---
 
-**Author:** Garvit Galhotra  
-**Project Name:** DesignX
+**Author:** Garvit Galhotra\
+**Project Name:** DesignX\
+**Category:** Advanced Frontend Engineering Project
